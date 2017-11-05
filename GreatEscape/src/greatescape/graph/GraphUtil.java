@@ -2,14 +2,12 @@ package greatescape.graph;
 
 import greatescape.movement.Move;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class GraphUtil {
-    public static Edge getEdge(int x1, int y1, int x2, int y2) {
-        return new Edge(new Node(x1, y1), new Node(x2, y2));
-    }
-
     public static int expectedDistance(Integer x, Integer y, Move finishLine) {
         switch (finishLine) {
             case UP:
@@ -24,7 +22,7 @@ public class GraphUtil {
         return 0;
     }
 
-    public static Move goTo(Node from, Node to) {
+    public static Move getDirection(Node from, Node to) {
         int x = from.getX() - to.getX();
         int y = from.getY() - to.getY();
 
@@ -42,18 +40,23 @@ public class GraphUtil {
         return new Node(node.getX() + x, node.getY() + y);
     }
 
-    public static List<Edge> buildBoard(int width, int height) {
-        List<Edge> edges = new LinkedList<>();
+    public static Map<Node, List<Node>> buildNeighbourList(int width, int height) {
+        Map<Node, List<Node>> neighbours = new HashMap<>();
         for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height - 1; j++) {
-                edges.add(GraphUtil.getEdge(i, j, i, j + 1));
+            for (int j = 0; j < height; j++) {
+                Node node = new Node(i, j);
+                List<Node> neighbourList = new LinkedList<>();
+                if (i != 0)
+                    neighbourList.add(new Node(i - 1, j));
+                if (i != (width - 1))
+                    neighbourList.add(new Node(i + 1, j));
+                if (j != 0)
+                    neighbourList.add(new Node(i, j - 1));
+                if (j != (height - 1))
+                    neighbourList.add(new Node(i, j + 1));
+                neighbours.put(node, neighbourList);
             }
         }
-        for (int i = 0; i < height - 1; i++) {
-            for (int j = 0; j < width; j++) {
-                edges.add(GraphUtil.getEdge(i, j, i + 1, j));
-            }
-        }
-        return edges;
+        return neighbours;
     }
 }

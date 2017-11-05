@@ -2,45 +2,33 @@ package greatescape.minimax;
 
 import greatescape.Gamer;
 import greatescape.astar.AStar;
-import greatescape.graph.Edge;
 import greatescape.graph.GraphUtil;
 import greatescape.graph.Node;
 import greatescape.movement.Move;
 import greatescape.movement.Wall;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class MiniMax {
-    private final List<Edge> edges;
-    private List<Edge> currentEdges = new LinkedList<>();
+    private Map<Node, List<Node>> neighbours;
     private List<Gamer> gamers = new LinkedList<>();
     private Gamer myGamer;
 
-    public MiniMax(int width, int height, int myId) {
-        this.edges = GraphUtil.buildBoard(width, height);
-    }
-
     public Enum execute() throws Exception {
-        Gamer winner = expectedResult(x -> y -> x > y);
         Enum result = null;
-        if (gamers.size() == 1) {
-            winner = currentWinner();
-        }
+        Gamer winner = expectedResult(x -> y -> x > y);
         Gamer loser = expectedResult(x -> y -> x <= y);
-        if (loser.equals(myGamer) && myGamer.getNumberOfWallsAvailable() > 0) {
-            return insertWall(winner);
+        if (loser.equals(myGamer) && !winner.equals(myGamer) && myGamer.getNumberOfWallsAvailable() > 0) {
+            result = addWall(winner);
         }
-        return Optional.ofNullable(result).orElse(movement());
+        return Optional.ofNullable(result).orElse(getMovement());
     }
 
-    private Move movement() throws Exception {
-        List<Node> shortestPath = Optional.ofNullable(myGamer.getShortestPath()).orElse(getShortestPath(myGamer));
+    private Move getMovement() throws Exception {
+        List<Node> shortestPath = getShortestPath(myGamer);
         Node myMovement = shortestPath.get(0);
-        return GraphUtil.goTo(myGamer.getPosition(), myMovement);
+        return GraphUtil.getDirection(myGamer.getPosition(), myMovement);
     }
 
     private Gamer expectedResult(Function<Integer, Function<Integer, Boolean>> compare) {
@@ -57,35 +45,20 @@ public class MiniMax {
         return expectedGamer;
     }
 
-    private Gamer currentWinner() throws Exception {
-        List<Node> shortestPath = getShortestPath(myGamer);
-        myGamer.setShortestPath(shortestPath);
-        int shortestDistance = shortestPath.size();
-        Gamer theBestGamer = myGamer;
-        for (Gamer gamer : gamers) {
-            shortestPath = getShortestPath(gamer);
-            gamer.setShortestPath(shortestPath);
-            if (shortestDistance > shortestPath.size()) {
-                shortestDistance = shortestPath.size();
-                theBestGamer = gamer;
-            }
-        }
-        return theBestGamer;
-    }
-
     private List<Node> getShortestPath(Gamer gamer) throws Exception {
-        ShortestPath shortestPath = new AStar(currentEdges);
+        ShortestPath shortestPath = new AStar(neighbours);
         shortestPath.solution(gamer.getPosition(), gamer.getFinishLine());
         return shortestPath.getPath();
     }
 
-    private Wall insertWall(Gamer winner) throws Exception {
-        List<Node> shortestPath = Optional.ofNullable(winner.getShortestPath()).orElse(getShortestPath(winner));
+    private Wall addWall(Gamer winner) throws Exception {
+        List<Node> shortestPath = getShortestPath(winner);
         Iterator<Node> iterator = shortestPath.iterator();
         Wall result;
-        for (int i = 0; i < 3 && iterator.hasNext(); i++) {
+        iterator.next();
+        for (int i = 0; i < 4 && iterator.hasNext(); i++) {
             Node node = iterator.next();
-            result = putWallForGamer(winner.getFinishLine(), node);
+            result = addWallForGamer(winner.getFinishLine(), node);
             if (result != null) {
                 return result;
             }
@@ -93,75 +66,73 @@ public class MiniMax {
         return null;
     }
 
-    private Wall putWallForGamer(Move move, Node node) {
+    private Wall addWallForGamer(Move move, Node node) {
         Wall result = null;
         switch (move) {
             case RIGHT:
-                result = putWallForGamerWhoGoesRight(node);
+                result = addWallForGamerWhoGoesRight(node);
                 break;
             case LEFT:
-                result = putWallForGamerWhoGoesLeft(node);
+                result = addWallForGamerWhoGoesLeft(node);
                 break;
             case DOWN:
-                result = putWallForGamerWhoGoesDown(node);
+                result = addWallForGamerWhoGoesDown(node);
                 break;
             case UP:
-                result = putWallForGamerWhoGoesUp(node);
+                result = addWallForGamerWhoGoesUp(node);
                 break;
         }
         return result;
     }
 
-    private Wall putWallForGamerWhoGoesLeft(Node node) {
-        if (isWallV(node) && isWallH(GraphUtil.shift(node, -1, 1))) {
+    private Wall addWallForGamerWhoGoesLeft(Node node) {
+        if (isPlaceForWallV(node) && isPlaceForWallH(GraphUtil.shift(node, -1, 1))) {
             return Wall.getVertical(node.getX(), node.getY());
-        } else if (isWallV(GraphUtil.shift(node, 0, -1)) && isWallH(GraphUtil.shift(node, -1, 0))) {
+        } else if (isPlaceForWallV(GraphUtil.shift(node, 0, -1)) && isPlaceForWallH(GraphUtil.shift(node, -1, 0))) {
             return Wall.getVertical(node.getX(), node.getY() - 1);
         }
         return null;
     }
 
-    private Wall putWallForGamerWhoGoesRight(Node node) {
-        if (isWallV(GraphUtil.shift(node, 1, 0)) && isWallH(GraphUtil.shift(node, 0, 1))) {
+    private Wall addWallForGamerWhoGoesRight(Node node) {
+        if (isPlaceForWallV(GraphUtil.shift(node, 1, 0)) && isPlaceForWallH(GraphUtil.shift(node, 0, 1))) {
             return Wall.getVertical(node.getX() + 1, node.getY());
-        } else if (isWallV(GraphUtil.shift(node, 1, -1)) && isWallH(node)) {
+        } else if (isPlaceForWallV(GraphUtil.shift(node, 1, -1)) && isPlaceForWallH(node)) {
             return Wall.getVertical(node.getX() + 1, node.getY() - 1);
         }
         return null;
     }
 
-    private Wall putWallForGamerWhoGoesDown(Node node) {
-        if (isWallH(GraphUtil.shift(node, 0, 1)) && isWallV(GraphUtil.shift(node, 1, 0))) {
+    private Wall addWallForGamerWhoGoesDown(Node node) {
+        if (isPlaceForWallH(GraphUtil.shift(node, 0, 1)) && isPlaceForWallV(GraphUtil.shift(node, 1, 0))) {
             return Wall.getHorizontal(node.getX(), node.getY() + 1);
-        } else if (isWallH(GraphUtil.shift(node, -1, 1)) && isWallV(node)) {
+        } else if (isPlaceForWallH(GraphUtil.shift(node, -1, 1)) && isPlaceForWallV(node)) {
             return Wall.getHorizontal(node.getX() - 1, node.getY() + 1);
         }
         return null;
     }
 
-    private Wall putWallForGamerWhoGoesUp(Node node) {
-        if (isWallH(node) && isWallV(GraphUtil.shift(node, 1, -1))) {
+    private Wall addWallForGamerWhoGoesUp(Node node) {
+        if (isPlaceForWallH(node) && isPlaceForWallV(GraphUtil.shift(node, 1, -1))) {
             return Wall.getHorizontal(node.getX(), node.getY());
-        } else if (isWallH(GraphUtil.shift(node, -1, 0)) && isWallV(GraphUtil.shift(node, 0, -1))) {
+        } else if (isPlaceForWallH(GraphUtil.shift(node, -1, 0)) && isPlaceForWallV(GraphUtil.shift(node, 0, -1))) {
             return Wall.getHorizontal(node.getX() - 1, node.getY());
         }
         return null;
     }
 
-    private boolean isWallH(Node node) {
-        return currentEdges.contains(GraphUtil.getEdge(node.getX(), node.getY() - 1, node.getX(), node.getY()))
-                && currentEdges.contains(GraphUtil.getEdge(node.getX() + 1, node.getY() - 1, node.getX() + 1, node.getY()));
+    private boolean isPlaceForWallH(Node node) {
+        return isEdge(GraphUtil.shift(node, 0, -1), node) && isEdge(GraphUtil.shift(node, 1, -1), GraphUtil.shift(node, 1, 0));
     }
 
-    private boolean isWallV(Node node) {
-        return currentEdges.contains(GraphUtil.getEdge(node.getX() - 1, node.getY(), node.getX(), node.getY()))
-                && currentEdges.contains(GraphUtil.getEdge(node.getX() - 1, node.getY() + 1, node.getX(), node.getY() + 1));
+    private boolean isPlaceForWallV(Node node) {
+        return isEdge(GraphUtil.shift(node, -1, 0), node) && isEdge(GraphUtil.shift(node, -1, 1), GraphUtil.shift(node, 0, 1));
     }
 
-    public void addWalls(List<Edge> walls) {
-        currentEdges.clear();
-        currentEdges.addAll(edges);
-        currentEdges.removeAll(walls);
+    private boolean isEdge(Node nodeA, Node nodeB) {
+        List<Node> neighbourListA = Optional.ofNullable(neighbours.get(nodeA)).orElse(Collections.EMPTY_LIST);
+        List<Node> neighbourListB = Optional.ofNullable(neighbours.get(nodeB)).orElse(Collections.EMPTY_LIST);
+        return neighbourListA.contains(nodeB) && neighbourListB.contains(nodeA);
     }
 
     public void setGamers(List<Gamer> gamers) {
@@ -170,5 +141,9 @@ public class MiniMax {
 
     public void setMyGamer(Gamer myGamer) {
         this.myGamer = myGamer;
+    }
+
+    public void setNeighbours(Map<Node, List<Node>> neighbours) {
+        this.neighbours = neighbours;
     }
 }

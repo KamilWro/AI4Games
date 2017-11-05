@@ -16,7 +16,7 @@ public class MapUtil {
                 .sorted(((entry1, entry2) -> {
                     int diff = entry1.getValue() - entry2.getValue();
                     if (diff == 0) {
-                        return -1;
+                        return entry1.getKey().hashCode() - entry2.getKey().hashCode();
                     }
                     return diff;
                 }))

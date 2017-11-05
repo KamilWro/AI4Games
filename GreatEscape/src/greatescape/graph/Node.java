@@ -27,7 +27,8 @@ public class Node {
 
         Node node = (Node) o;
 
-        return getX() != node.getX() && getY() == node.getY();
+        if (getX() != node.getX()) return false;
+        return getY() == node.getY();
     }
 
     @Override

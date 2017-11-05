@@ -2,19 +2,19 @@ package greatescape.astar;
 
 import greatescape.astar.exception.AStarException;
 import greatescape.astar.util.MapUtil;
-import greatescape.graph.Edge;
 import greatescape.graph.GraphUtil;
 import greatescape.graph.Node;
 import greatescape.minimax.ShortestPath;
 import greatescape.movement.Move;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Kamil Breczko
  */
 public class AStar implements ShortestPath {
-    private final List<Edge> edges;
+    private final Map<Node, List<Node>> neighbours;
 
     private Set<Node> closedSet = new LinkedHashSet<>();
     private Set<Node> openSet = new HashSet<>();
@@ -26,8 +26,8 @@ public class AStar implements ShortestPath {
     private Move finishLine;
     private Node goal;
 
-    public AStar(List<Edge> edges) {
-        this.edges = edges;
+    public AStar(Map<Node, List<Node>> neighbours) {
+        this.neighbours = neighbours;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class AStar implements ShortestPath {
             Node current = findNodeWithMinimalFScore();
             openSet.remove(current);
             closedSet.add(current);
-            if (getHScore(current) == (distance / 2)) {
+            if (getHScore(current) == 0 || closedSet.size() > 30) {
                 this.goal = current;
                 return;
             }
@@ -76,26 +76,15 @@ public class AStar implements ShortestPath {
     }
 
     private Iterable<Node> getNeighbors(Node node) {
-        List<Node> neighbors = new LinkedList<>();
-        for (Edge edge : edges) {
-            if (edge.getSource().equals(node) && !closedSet.contains(edge.getDestination())) {
-                neighbors.add(edge.getDestination());
-            } else if (edge.getDestination().equals(node) && !closedSet.contains(edge.getSource())) {
-                neighbors.add(edge.getSource());
-            }
-        }
-        return neighbors;
+        List<Node> neighboursList = neighbours.get(node);
+        return neighboursList
+                .stream()
+                .filter(neighbour -> !closedSet.contains(neighbour))
+                .collect(Collectors.toList());
     }
 
-    private int getDistance(Node node, Node target) throws AStarException {
-        Edge e = new Edge(node, target);
-        for (Edge edge : edges) {
-            if (edge.equals(e)) {
-                return edge.getWeight();
-            }
-        }
-
-        throw new AStarException("No edge from: " + node + "to: " + target);
+    private int getDistance(Node node, Node target) {
+        return 1;
     }
 
     private int getShortestDistance(Node target) {

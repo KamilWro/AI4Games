@@ -3,8 +3,6 @@ package greatescape;
 import greatescape.graph.Node;
 import greatescape.movement.Move;
 
-import java.util.List;
-
 /**
  * @author Kamil Breczko
  */
@@ -12,7 +10,6 @@ public class Gamer {
     private final int id;
     private final Node position;
     private final int numberOfWallsAvailable;
-    private List<Node> shortestPath;
     private final Move finishLine;
 
     public Gamer(int id, Node position, int numberOfWallsAvailable, Move finishLine) {
@@ -50,19 +47,11 @@ public class Gamer {
         return numberOfWallsAvailable;
     }
 
-    public List<Node> getShortestPath() {
-        return shortestPath;
-    }
-
-    public void setShortestPath(List<Node> shortestPath) {
-        this.shortestPath = shortestPath;
-    }
-
     public Move getFinishLine() {
         return finishLine;
     }
 
-    private int getId() {
+    public int getId() {
         return id;
     }
 }
