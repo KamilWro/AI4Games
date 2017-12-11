@@ -1,0 +1,72 @@
+\documentclass[a4paper]{mwart}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{polski}
+\usepackage{listings}
+
+% Ozdoba hiperłączy
+\usepackage[pdfborder={0 0 0}]{hyperref}
+% Styl francuski
+\frenchspacing
+% Wcięcie
+\setlength{\parindent}{0pt}
+% Paczki na grafike
+\usepackage{graphicx}
+\usepackage{subfig}
+% Ozdoba zdjęć
+\usepackage[nofoot,hdivide={2cm,*,2cm},vdivide={2cm,*,2cm}]{geometry}
+
+\author{Kamil Breczko} 
+\title{Bot do gry Ghost in the Cell}
+\date{9 grudnia 2017}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+\tableofcontents
+\thispagestyle{empty}
+
+\newpage
+\section{Opis gry}
+Gra \emph{"Ghost in the Cell"} rozgrywa się na planszy z dwoma graczami, na której umieszczono fabryki (od 7 do 15 fabryk). Początkowo każdy z graczy posiada po jednej fabryce, reszta fabryk jest neutralna. Fabryka może produkować cyborgi, które mają za zadanie bronić daną fabryke i atakować inne. Celem gry jest wyprodukowanie maksymalnej ilości cyborgów, aby zniszczyć przeciwników.
+W każdej turze gracz może podjąć nieograniczoną liczbę ruchów:
+\begin{itemize}
+ \item przeniesienie cyborgów do zaprzyjaźnionej fabryki;
+ \item wysłanie cyborgów do wrogiej fabryki, w celu zniszczenia;
+ \item wysłanie bomb, w celu uszkodzenia cyborgów stacjonujących w fabryce oraz zablokowanie produkcji cyborgów na 5 tur; (ilość bomb: 2)
+ \item zwiększenie produkcji fabryki kosztem 10 cyborgów;
+\end{itemize}
+
+\section{Opis algorytmu}
+Rozwiązanie do gry \emph{"Ghost in the Cell"} wykorzystuje drzewa decyzyjne. Algorytm podejmuje ciąg decyzji analizując każdą fabrykę z osobna, czyli każda decyzja z danej fabryki nie zależy od stanu innych fabryk gracza. Aby zwyciężyć, algorytm przyjmuje strategie ofensywną. \\ 
+Zastosowane techniki:
+\begin{itemize}
+ \item Co 50 tur wybierana jest "~największa"~ fabryka, pod względem ilości przebywających tam cyborgów. Po wybraniu wrogiej fabryki, wyszukiwana jest fabryka gracza, która znajduje się najbliżej. Następnie wysyłana jest jedna jednostka bomby, w celu zniszczenia znajdujących się tam cyborgów oraz spowolnienie ich produkcji;
+ \item W każdej fabryce gracza jest uruchamiana funkcja oceniająca fabryki przeciwnika, w celu określenia najlepszego celu. Dana funkcja wykorzystuje informacje: odległość, ilość cyborgów w fabryce gracza, ilość cyborgów w fabryce przeciwnika, ilość cyborgów wysłanych do fabryki przeciwnika;
+
+
+\begin{scriptsize}
+\begin{lstlisting}[language=Java]
+ rateTarget(){
+    rateDistance = 2/(distance(myFactory,enemyFactory));
+    sumCyborgs = -cyborgs;
+    rateProduction = 10* production;
+    for (Troop troop : findTroopsByTargetFactory(id, troops)) {
+    	sumCyborgs += (troop.getOwner() == 1) ? troop.getCyborgs() : -troop.getCyborgs();
+    }
+    result = (sumCyborgs + rateProduction) * rateDistance;    
+    if (result > 0) {
+            return result * 2;
+    }
+    return result * 1.5;
+  }
+\end{lstlisting}
+\end{scriptsize}
+\end{itemize}
+Wykonując ruch w danej turze, uwzględniane są wszystkie fabryki. Z każdej fabryki gracza są wysyłane cyborgi do fabryk przeciwnika, aż ilość zrówna się z zerem. Początkowe cele wybierane są zgodnie z oceną funkcji, a ilość cyborgów zgodnie ze wzorem: (ilość\_cyborgów)/2.
+\end{document}
