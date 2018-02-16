@@ -48,4 +48,20 @@ public class Util {
     public static Target findTarget(List<Target> targets) {
         return targets.stream().findFirst().orElse(null);
     }
+
+    public static String getSkill(Coordinate coordinate) {
+        return "SKILL " + coordinate.getX() + " " + coordinate.getY();
+    }
+
+    public static String getMove(Coordinate coordinate, Coordinate myCoordinate, Coordinate speed) {
+        int x = coordinate.getX() - (int) (1.5 * speed.getX());
+        int y = coordinate.getY() - (int) (1.5 * speed.getY());
+        int throttle = (int) Util.getDistance(coordinate, myCoordinate);
+        return x + " " + y + " " + throttle;
+    }
+
+    public static boolean isNear(Looter looter1, Looter looter2) {
+        double distance = Util.getDistance(looter1.getCoordinate(), looter2.getCoordinate());
+        return distance < 1500 && distance > 0;
+    }
 }

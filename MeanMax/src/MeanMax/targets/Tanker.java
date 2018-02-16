@@ -53,7 +53,4 @@ public class Tanker extends Target {
         return BigDecimal.valueOf((Util.isSameDirection(reaperCoordinate, reaperSpeed, coordinate)) ? 1.0 : 0.8);
     }
 
-    public float getMass() {
-        return mass;
-    }
 }

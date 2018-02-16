@@ -1,5 +1,8 @@
 package MeanMax;
 
+import MeanMax.controllers.DestroyerController;
+import MeanMax.controllers.DoofController;
+import MeanMax.controllers.ReaperController;
 import MeanMax.targets.Tanker;
 import MeanMax.targets.Wreck;
 
@@ -12,7 +15,12 @@ class Player {
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
+        ReaperController reaperController = new ReaperController();
+        DestroyerController destroyerController = new DestroyerController();
+        DoofController doofController = new DoofController();
+
         addPlayersGame();
+
         while (true) {
             tankers.clear();
             wrecks.clear();
@@ -59,9 +67,9 @@ class Player {
                 }
             }
 
-            System.out.println(playersGame.get(0).getMoveReaper(wrecks, tankers, playersGame));
-            System.out.println(playersGame.get(0).getMoveDestroyer(tankers));
-            System.out.println(playersGame.get(0).getMoveDoof(playersGame, wrecks));
+            System.out.println(playersGame.get(0).getLooterMove(reaperController, wrecks, tankers, playersGame));
+            System.out.println(playersGame.get(0).getLooterMove(destroyerController, wrecks, tankers, playersGame));
+            System.out.println(playersGame.get(0).getLooterMove(doofController, wrecks, tankers, playersGame));
         }
     }
 
